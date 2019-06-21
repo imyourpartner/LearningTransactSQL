@@ -1,16 +1,15 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace ConsoleApp.db.AdventureWorks2017.Models
 {
-    public partial class DB_A4919A_TestingContext : DbContext
+    public partial class ConsoleAppContext : DbContext
     {
-        public DB_A4919A_TestingContext()
+        public ConsoleAppContext()
         {
         }
 
-        public DB_A4919A_TestingContext(DbContextOptions<DB_A4919A_TestingContext> options)
+        public ConsoleAppContext(DbContextOptions<ConsoleAppContext> options)
             : base(options)
         {
         }
@@ -92,8 +91,10 @@ namespace ConsoleApp.db.AdventureWorks2017.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseSqlServer("Server=sql5041.site4now.net;Database=DB_A4919A_Testing;User=DB_A4919A_Testing_admin;Password=DB_A4919A_;");
+                //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
+                //optionsBuilder.UseSqlServer("Server=sql5041.site4now.net;Database=DB_A4919A_Testing;User=DB_A4919A_Testing_admin;Password=DB_A4919A_;");
+                optionsBuilder.UseSqlServer("Server=localhost;Database=AdventureWorksFix;Trusted_Connection=True;");
+
             }
         }
 
