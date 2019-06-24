@@ -1263,7 +1263,7 @@ En el ejemplo anterior, hemos utilizado una clase genérica; Podemos declarar un
 
 
 
-
+# LINQ EN ACCION
 
 
 
@@ -1301,13 +1301,687 @@ namespace ConsoleApp
 
 
 
+### Fundamentos de LINQ
 
 
-<https://www.tutorialspoint.com/csharp/csharp_arraylist.htm>
+A un alto nivel, hay varios beneficios que pueden obtenerse al usar LINQ (Language Integrated Query), incluyendo:
+
+- Reducir la cantidad de código que se necesita escribir.
+  Una mejor comprensión de la intención de lo que está haciendo el código.
+- Una vez aprendido, puede usar un conjunto similar de conocimientos de consultas LINQ contra diferentes fuentes de datos (objetos en memoria, o fuentes remotas como SQL Server o incluso Twitter).
+- Las consultas se pueden componer juntas y construir en etapas.
+- Las consultas ofrecen la seguridad de la verificación de tipos en tiempo de compilación.
+
+Esencialmente, LINQ permite que las consultas se traten como ciudadanos de primera clase en C # y Visual Basic.
+
+### Los bloques de construcción de LINQ
+
+Los dos bloques de construcción fundamentales de LINQ son los conceptos de elementos y secuencias.
+
+Una secuencia puede considerarse como una lista de elementos, y cada elemento de la lista es un elemento. 
+
+Una secuencia es una instancia de una clase que implementa la interfaz IEnumerable <T>.
+
+Si una matriz de números se declarara como: int [] fibonacci = {0, 1, 1, 2, 3, 5}; la variable fibonacci representa una secuencia con cada int en la matriz como un elemento individual.
+
+Una secuencia podría ser una secuencia local de objetos en memoria o una secuencia remota, como una base de datos de SQL Server. En el caso de fuentes de datos remotas (por ejemplo, SQL Server), estas secuencias remotas también implementan la interfaz IQueryable <T>.
+
+Las consultas, o más específicamente los operadores de consulta, trabajan en una secuencia de entrada y producen algún valor de salida. Este valor de salida podría ser una versión transformada de la secuencia de entrada, es decir, una secuencia de salida o un único valor escalar, como un conteo del número de elementos en la secuencia de entrada.
+
+Las consultas que se ejecutan en secuencias locales se conocen como consultas locales o consultas de LINQ to Objects.
+
+Hay una gran cantidad de operadores de consulta que se implementan como métodos de extensión en la clase estática System.Linq.Enumerable. Este conjunto de operadores de consulta se conocen como operadores de consulta estándar. 
+
+Una cosa importante a tener en cuenta cuando se utilizan operadores de consulta es que no alteran la secuencia de entrada; más bien, el operador de consulta devolverá una nueva secuencia (o un valor escalar).
+
+## Scalar return values and output sequences - Valores de retorno escalares y secuencias de salida .
+
+Un operador de consulta devuelve una secuencia de salida o un valor escalar. En el siguiente código, la secuencia de entrada fibonacci es operada primero por el operador de consulta de conteo que produce un único valor escalar que representa el número de elementos en la secuencia de entrada. A continuación, la misma secuencia de entrada es operada por el operador de consulta Distinct que produce una nueva secuencia de salida que contiene los elementos de la secuencia de entrada, pero con elementos duplicados eliminados.
+
+```c#
+using System;
+using System.Collections.Generic; // Collecciones genericas
+using System.Linq; // LinQ
+
+namespace ConsoleApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            int[] fibonacci = { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34 }; // The Fibonacci Sequence
+            int NumeroDeElementos = fibonacci.Count(); // Retorna el numero de elementos de una secuencia.
+            Console.WriteLine("Total de Elementos: {0}", NumeroDeElementos); // Output sequence return value 
+            IEnumerable<int> NumerosDistintos = fibonacci.Distinct(); //Devuelve elementos distintos de una secuencia utilizando el comparador de igualdad predeterminado para comparar valores.
+            Console.WriteLine("Elementos distintos de la sequence:");
+            foreach (var number in NumerosDistintos)
+            {
+                Console.WriteLine(number);
+            }
+            // Salida: 0,1,2,3,5,8,13,21,34
+        }
+    }
+}
+```
+
+## Deferred execution - Ejecución diferida
+
+La mayoría de los operadores de consulta no se ejecutan inmediatamente; Su ejecución se aplaza hasta un momento posterior en la ejecución del programa. **Esto significa que la consulta no se ejecuta cuando se crea, sino cuando se usa o se enumera.** 
+
+La ejecución diferida significa que la secuencia de entrada se puede modificar después de que se construya la consulta, pero antes de que se ejecute la consulta. Solo cuando se ejecuta la consulta se procesa la secuencia de entrada.
+En el siguiente código, la secuencia de entrada se modifica después de que se construye la consulta, pero antes de que se ejecute.
+
+```c#
+using System;
+using System.Collections.Generic; // Collecciones genericas
+using System.Linq; // LinQ
+
+namespace ConsoleApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            int[] fibonacci = { 0, 1, 1, 2, 3, 5 }; // Array
+            IEnumerable<int> MayoresQueDos;
+
+            MayoresQueDos = fibonacci.Where(x => x > 2); 
+            
+            foreach (var i in MayoresQueDos)
+            {
+                Console.WriteLine("{0}" + ",", i);
+            }
+            Console.ReadKey();
+            Console.Clear();
+
+            fibonacci[0] = 99; // Aqui
+            foreach (var i in MayoresQueDos)
+            {
+                Console.WriteLine("{0}" + ",", i);
+            }
+        }
+    }
+}
+```
+
+Observe que el valor 99 se ha incluido en los resultados, aunque en el momento en que se construyó la consulta, el primer elemento seguía siendo el valor original de 0.
+Con la excepción de aquellos que devuelven un valor escalar (o un solo elemento de la secuencia de entrada) como **Count**, **Min** y **Last**; Los operadores de consulta estándar trabajan de esta forma de ejecución diferida. Por lo tanto, utilizar operadores como **Count** **hará que la consulta se ejecute inmediatamente y no se aplace.**
+Hay una serie de operadores de conversión que también causan la ejecución inmediata de consultas, como ToList, ToArray, ToLookup y ToDictionary.
+
+En el siguiente código, la matriz de fibonacci se modifica como en el código de ejemplo anterior, pero en este ejemplo, en el momento en que se realiza la modificación (fibonacci [0] = 99), la consulta ya se ha ejecutado debido a la ToArray adicional. ().
+
+```c#
+using System;
+using System.Collections.Generic; // Collecciones genericas
+using System.Linq; // LinQ
+
+namespace ConsoleApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            int[] fibonacci = { 0, 1, 1, 2, 3, 5 }; // Array
+            IEnumerable<int> MayoresQueDos;
+
+            MayoresQueDos = fibonacci.Where(x => x > 2).ToArray();
+            // En este punto, la consulta se ha ejecutado debido a .ToArray()
+            foreach (var i in MayoresQueDos)
+            {
+                Console.WriteLine("{0}" + ",", i);
+            }
+            Console.ReadKey();
+            Console.Clear();
+
+            fibonacci[0] = 99; // Aqui
+            foreach (var i in MayoresQueDos)
+            {
+                Console.WriteLine("{0}" + ",", i);
+            }
+        }
+    }
+}
+```
+
+Algunos operadores de consulta permiten proporcionar lógica personalizada. Esta lógica personalizada se puede suministrar al operador de consulta mediante una expresión lambda.
+El código de
+
+```c#
+ 14. fibonacci.Where (x => x> 2)
+```
+
+ en el ejemplo de código anterior es un ejemplo de un operador de consulta que recibe alguna lógica personalizada. Aquí, la expresión lambda x => x> 2 solo devolverá elementos (en este caso, ints) que son mayores que 2.
+**Cuando un operador de consulta toma una expresión lambda, aplicará la lógica en la expresión lambda a cada elemento individual en la secuencia de entrada.**
+El tipo de expresión lambda que se proporciona a un operador de consulta depende de qué tarea está realizando el operador de consulta.
+
+![](https://github.com/imyourpartner/MyFiles/blob/master/fibonacciwheretoarray.png)
+
+ En la Figura , podemos ver la firma del operador de consulta Where; aquí se proporciona el elemento de entrada int y se debe devolver un valor de boole que las determinaciones del elemento se incluirán en la secuencia de salida.
+
+Como alternativa al uso de una expresión lambda, también es posible usar un delegado tradicional que apunta a un método
+
+## Fluent and Query Expression Styles -  Estilos de expresión fluida y de consulta.
+
+Hay dos estilos para escribir consultas LINQ: 
+
+- El estilo fluido (o sintaxis fluida) 
+- El estilo de expresión de consulta (o sintaxis de consulta).
+
+## El estilo fluido 
+
+Utiliza métodos de extensión de operador de consulta para crear consultas, mientras que el estilo de expresión de consulta utiliza una sintaxis diferente que el compilador traducirá en una sintaxis fluida.
+
+Las muestras de código hasta este punto han utilizado la sintaxis fluida.
+La sintaxis fluida hace uso de los métodos de extensión del operador de consulta como se define en la clase estática System.Linq.Enumerable (o System.Linq.Queryable para interpretado o
+System.Linq.ParallelEnumerable para consultas PLINQ). 
+
+Estos métodos de extensión agregan métodos adicionales a las instancias de IEnumerable <T>. Esto significa que cualquier instancia de una clase que implemente esta interfaz puede usar estos métodos de extensión LINQ fluidos.
+Los operadores de consultas se pueden utilizar individualmente o encadenados para crear consultas más complejas.
+
+## Operadores de consulta encadenados
+
+El siguiente código utilizará tres operadores de consulta encadenados: Where, OrderBy y Select.
+
+```c#
+using System;
+using System.Collections.Generic; // Collecciones genericas
+using System.Linq; // LinQ
+
+class Ingrediente
+{
+    public string Nombre { get; set; }
+    public int NumeroDeCalorias { get; set; }   
+}
+
+namespace ConsoleApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Ingrediente[] Ingredientes =
+            {
+                new Ingrediente{ Nombre = "Azucar", NumeroDeCalorias = 500},
+                new Ingrediente { Nombre = "Huevos", NumeroDeCalorias = 100},
+                new Ingrediente { Nombre = "Leche", NumeroDeCalorias = 150},
+                new Ingrediente { Nombre = "Harina", NumeroDeCalorias = 50},
+                new Ingrediente { Nombre = "Mantequilla", NumeroDeCalorias = 200}
+            };
+
+            IEnumerable<string> IngredientesDeAltaCaloriasQuery =
+                Ingredientes.Where(x => x.NumeroDeCalorias >= 150)
+                    .OrderBy(x => x.Nombre)
+                    .Select(x => x.Nombre);
+
+            foreach (var ingrediente in IngredientesDeAltaCaloriasQuery)
+            {
+                Console.WriteLine(ingrediente);
+            }
+        }
+    }
+}
+```
+
+La ejecución de este código produce el siguiente resultado:
+
+- Mantequilla
+-  Leche 
+- Azúcar
+
+La la siguiente figura  muestra una representación gráfica de esta cadena de operadores de consulta. Cada operador trabaja en la secuencia proporcionada por el operador de consulta anterior. Observe que la secuencia de entrada inicial (representada por los ingredientes de la variable) es un **IEnumerable<Ingrediente>** , mientras que la secuencia de salida (representada por la variable IngredientesDeAltaCaloriasQuery) es un tipo diferente; es un **IEnumerable<string>**
+
+![](https://github.com/imyourpartner/MyFiles/blob/master/Ienurableingredientes.png)
+
+En este ejemplo, la cadena de operadores está trabajando con una secuencia de elementos Ingrediente hasta que el operador Seleccionar transforma cada elemento en la secuencia; Cada objeto Ingrediente se transforma en una cadena simple. Esta transformación se llama proyección. Los elementos de entrada se proyectan en elementos de salida transformados.
+
+La expresión lambda proporcionada al operador de consulta Seleccionar decide qué "forma" tomarán los elementos en la secuencia de salida.
+
+ La expresión lambda x => x.Nombre está indicando al operador Seleccionar "para cada elemento Ingrediente, genere un elemento de cadena con el valor de la propiedad Nombre desde el Ingrediente de entrada".
+
+## Query expression style - Estilo de expresión de consulta
+
+Las expresiones de consulta ofrecen una amabilidad sintáctica sobre la sintaxis fluida.
+El siguiente código muestra la versión equivalente utilizando la sintaxis de consulta de la consulta de estilo fluido anterior.
+
+```c#
+using System;
+using System.Collections.Generic; // Collecciones genericas
+using System.Linq; // LinQ
+
+class Ingrediente
+{
+    public string Nombre { get; set; }
+    public int NumeroDeCalorias { get; set; }   
+}
+
+namespace ConsoleApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Ingrediente[] Ingredientes =
+            {
+                new Ingrediente{ Nombre = "Azucar", NumeroDeCalorias = 500},
+                new Ingrediente { Nombre = "Huevos", NumeroDeCalorias = 100},
+                new Ingrediente { Nombre = "Leche", NumeroDeCalorias = 150},
+                new Ingrediente { Nombre = "Harina", NumeroDeCalorias = 50},
+                new Ingrediente { Nombre = "Mantequilla", NumeroDeCalorias = 200}
+            };
+
+            IEnumerable<string> IngredientesDeAltaCaloriasQuery = from i in Ingredientes
+                                                                  where i.NumeroDeCalorias >= 150
+                                                                  orderby i.Nombre
+                                                                  select i.Nombre;
+
+            foreach (var ingrediente in IngredientesDeAltaCaloriasQuery)
+            {
+                Console.WriteLine(ingrediente);
+            }
+        }
+    }
+}
+```
+
+- The fluent style (or fluent syntax)  - El estilo fluido (o sintaxis fluida) 
+
+```c#
+IEnumerable<string> IngredientesDeAltaCaloriasQuery =
+    Ingredientes.Where(x => x.NumeroDeCalorias >= 150)
+        .OrderBy(x => x.Nombre)
+        .Select(x => x.Nombre);
+```
+
+- The query expression style (or query syntax). - El estilo de expresión de consulta (o sintaxis de consulta).
+
+```c#
+IEnumerable<string> IngredientesDeAltaCaloriasQuery = 
+    from i in Ingredientes
+    where i.NumeroDeCalorias >= 150
+    orderby i.Nombre
+    select i.Nombre;
+```
+
+La ejecución de este código produce el mismo resultado que la versión de sintaxis fluida: 
+
+- Mantequilla 
+- Leche
+- Azúcar)
+
+Los pasos que se realizan son los mismos que en la versión de sintaxis fluida, con cada cláusula de consulta (**`from, where, orderby, select`**) pasando una secuencia modificada a la siguiente cláusula de consulta.
+
+La expresión de consulta en el código anterior comienza con la cláusula from. La cláusula from tiene dos propósitos: 
+
+- El primero es describir cuál es la secuencia de entrada (en este caso, los ingredientes); 
+- El segundo es introducir una variable de rango.
+
+La cláusula final es la cláusula de selección, que describe cuál será la secuencia de salida de toda la consulta. Al igual que con la versión de sintaxis fluida, la cláusula de selección en el código anterior está proyectando una secuencia de objetos Ingrediente en una secuencia de string objects.
+
+## Range variables - Una variable de rango
+
+Una variable de rango es un identificador que representa cada elemento en la secuencia a su vez. Es similar a la variable utilizada en una sentencia `foreach`; a medida que se procesa la secuencia, esta variable de rango representa el elemento actual que se está procesando.
+
+ En el código anterior, la variable de rango i está siendo declarada. Aunque se utiliza el mismo identificador de variable de rango i en cada cláusula, la secuencia en que la variable de rango "atraviesa" es diferente. Cada cláusula funciona con la secuencia de entrada producida a partir de la cláusula anterior (o la entrada inicial `IEnumerable <T>`).
+
+ Esto significa que cada cláusula está procesando una secuencia diferente; es simplemente el nombre del identificador de variable de rango que se está reutilizando.
+
+Además de la variable de rango introducida en la cláusula `from`, se pueden agregar variables de rango adicionales utilizando otras cláusulas o palabras clave. Lo siguiente puede introducir nuevas variables de rango en una expresión de consulta:
+
+- Additional `from` clauses
+- The `let` clause
+- The `into` keyword
+- The `join` clause
+
+## The let clause - La cláusula let
+
+Una cláusula `let` en una expresión de consulta LINQ permite la introducción de una variable de rango adicional. Esta variable de rango adicional se puede usar en otras cláusulas que la siguen.
+
+En el siguiente código, la cláusula let se usa para introducir una nueva variable de rango llamada esLacteo, que será de tipo booleano.
+
+```c#
+using System;
+using System.Collections.Generic; // Collecciones genericas
+using System.Linq; // LinQ
+
+class Ingrediente
+{
+    public string Nombre { get; set; }
+    public int NumeroDeCalorias { get; set; }   
+}
+
+namespace ConsoleApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Ingrediente[] Ingredientes =
+            {
+                new Ingrediente{ Nombre = "Azucar", NumeroDeCalorias = 500},
+                new Ingrediente { Nombre = "Huevos", NumeroDeCalorias = 100},
+                new Ingrediente { Nombre = "Leche", NumeroDeCalorias = 150},
+                new Ingrediente { Nombre = "Harina", NumeroDeCalorias = 50},
+                new Ingrediente { Nombre = "Mantequilla", NumeroDeCalorias = 200}
+            };
+
+            IEnumerable<Ingrediente> IngredientesDeAltaCaloriasQuery = 
+                from i in Ingredientes
+                let esLacteo = i.Nombre == "Leche" || i.Nombre == "Mantequilla"
+                where i.NumeroDeCalorias >= 150 && esLacteo
+                select i;
+
+            foreach (var ingrediente in IngredientesDeAltaCaloriasQuery)
+            {
+                Console.WriteLine(ingrediente.Nombre);
+            }
+
+            Console.WriteLine("Hola");
+            Console.ReadKey();
+        }
+    }
+}
+```
+
+La salida de este código produce:
+
+- Mantequilla
+-  Leche
+
+En el código anterior, la variable de rango EsLacteo se introduce y luego se utiliza en la cláusula where. Observe que la variable de rango original i permanece disponible para la cláusula de selección.
+En este ejemplo, la nueva variable de rango es un valor escalar simple, pero también puede usarse para introducir una subsecuencia. En el siguiente ejemplo de código, los ingredientes de la variable de rango no son un valor escalar, sino una serie de array strings
+
+```c#
+using System;
+using System.Collections.Generic; // Collecciones genericas
+using System.Linq; // LinQ
+
+
+namespace ConsoleApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string[] csvRecipes = 
+            {
+                "milk,sugar,eggs",
+                "flour,BUTTER,eggs",
+                "vanilla,ChEEsE,oats"
+            };
+            var dairyQuery = 
+
+                from csvRecipe in csvRecipes
+                let ingredients = csvRecipe.Split(',')
+
+                from ingredient in ingredients
+                let uppercaseIngredient = ingredient.ToUpper()
+
+                where  uppercaseIngredient == "MILK" || 
+                       uppercaseIngredient == "BUTTER" || 
+                       uppercaseIngredient == "CHEESE"
+                select uppercaseIngredient;
+
+            foreach (var dairyIngredient in dairyQuery)
+            {
+                Console.WriteLine("{0} is dairy", dairyIngredient);
+            }
+
+            Console.WriteLine("Hola");
+            Console.ReadKey();
+        }
+    }
+}
+```
+
+Observe en el código anterior que estamos usando varias cláusulas `let` y también cláusulas adicionales. 
+
+El uso de cláusulas adicionales es otra forma de introducir nuevas variables de rango en una expresión de consulta.
+
+## The `into` keyword  - La palabra clave `into`
+
+La palabra clave `into` también permite declarar un nuevo identificador que puede almacenar el resultado de una cláusula de selección (así como las cláusulas de `group` y `join`).
+
+El siguiente código demuestra cómo usar para crear un nuevo tipo anónimo y luego usarlo en el resto de la expresión de consulta.
+
+```c#
+using System;
+using System.Collections.Generic; // Collecciones genericas
+using System.Linq; // LinQ
+
+namespace ConsoleApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Ingredient[] ingredients = 
+            {
+                new Ingredient{ Name = "Sugar", Calories = 500 },
+                new Ingredient { Name = "Egg", Calories = 100 },
+                new Ingredient { Name = "Milk", Calories = 150 },
+                new Ingredient { Name = "Flour", Calories = 50 },
+                new Ingredient { Name = "Butter", Calories = 200 }
+            };
+
+            IEnumerable<Ingredient> highCalDairyQuery = 
+                from i in ingredients
+                select new // anonymous type *
+                {
+                    OriginalIngredient = i,
+                    IsDairy = i.Name == "Milk" || i.Name == "Butter",
+                    IsHighCalorie = i.Calories >= 150
+                } 
+                into temp
+                where temp.IsDairy && temp.IsHighCalorie
+                // cannot write "select i;" as into hides the previous range variable i 
+                select temp.OriginalIngredient;
+
+            foreach (var ingredient in highCalDairyQuery)
+            {
+                Console.WriteLine(ingredient.Name);
+            }
+        }
+    }
+    class Ingredient
+    {
+        public string Name { get; set; }
+        public int Calories { get; set; }
+    }
+}
+```
+
+> Salida: Milk Butter
+
+Tenga en cuenta que al utilizar la variable de rango anterior `i` oculta. Esto significa que no se puede utilizar en la selección final.
+
+Sin embargo, la cláusula `let` no oculta la (s) variable (s) de rango anterior, lo que significa que aún pueden usarse más adelante en expresiones de consulta.
 
 
 
+## The `join` clause  - La cláusula de unión
+
+Toma dos secuencias de entrada en las que los elementos de cualquiera de las dos secuencias no tienen necesariamente una relación directa en el modelo de dominio de clase.
+
+Para realizar una unión, algún valor de los elementos en la primera secuencia se compara para igualar con algún valor de los elementos en la segunda secuencia. 
+
+Es importante tener en cuenta que la cláusula de unión realiza equi-joins; Los valores de ambas secuencias se comparan para la igualdad. 
+
+Esto significa que la cláusula de unión no admite non-equijoins como desigualdad, o comparaciones como mayor que o menor que. Debido a esto, en lugar de especificar elementos unidos utilizando un operador como == en C #, se utiliza la palabra clave equals. El diseño que está pensando en introducir esta palabra clave es dejar muy claro que las uniones son equi-joins.
+
+Los tipos comunes de uniones incluyen:
+
+- Inner joins. Uniones internas.
+- Group joins. Uniones grupales.
+- Left outer joins. Uniones externas izquierdas.
+
+Los siguientes ejemplos de código de unión asumen que se han definido las siguientes clases:
+
+```c#
+class Recipe
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+}
+class Review
+{
+    public int RecipeId { get; set; }
+    public string ReviewText { get; set; }
+}
+```
+
+Estas dos clases modelan el hecho de que los Recipes pueden tener 0, 1 o muchas revisiones
+
+ La clase Review tiene una propiedad ID que contiene el mismo ID de Recipe, Recipe a la que pertenece la Review; 
+
+Tenga en cuenta que aquí no hay una relación directa en forma de una propiedad de tipo Recipe.
+
+## `Inner join` - Unir internamente
+
+Una unión interna devuelve un elemento en la secuencia de salida para cada elemento en la primera secuencia que tiene elementos coincidentes en la segunda secuencia. Si un elemento en la primera secuencia no tiene ningún elemento coincidente en la segunda secuencia, no aparecerá en la secuencia de salida.
+
+```c#
+using System;
+using System.Collections.Generic; // Collecciones genericas
+using System.Linq; // LinQ
+
+namespace ConsoleApp
+{
+    class Recipe
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+    class Review
+    {
+        public int RecipeId { get; set; }
+        public string ReviewText { get; set; }
+    }
+    class Program
+    {
+        static void Main()
+        {
+            Recipe[] recipes = 
+            {
+                new Recipe { Id = 1, Name = "Mashed Potato" },
+                new Recipe { Id = 2, Name = "Crispy Duck" },
+                new Recipe { Id = 3, Name = "Sachertorte" }
+            };
+
+            Review[] reviews = 
+            {
+                new Review { RecipeId = 1, ReviewText = "Tasty!" },
+                new Review { RecipeId = 1, ReviewText = "Not nice :(" },
+                new Review { RecipeId = 1, ReviewText = "Pretty good" },
+                new Review { RecipeId = 2, ReviewText = "Too hard" },
+                new Review { RecipeId = 2, ReviewText = "Loved it" }
+            };
+            var query = 
+                from recipe in recipes
+                join review in reviews on recipe.Id equals review.RecipeId
+                select new // anonymous type 
+                {
+                    RecipeName = recipe.Name, RecipeReview = review.ReviewText
+                };
+
+            foreach (var item in query)
+            {
+                Console.WriteLine("{0} - '{1}'", item.RecipeName, item.RecipeReview);
+            }
+        }
+    }
+}
+```
+
+En este código anterior, se crean dos secuencias de entrada: recipes, que contienen una cantidad de recetas, y una segunda secuencia, revisiones del tipo de objeto de Revisiónes.
+
+La expresión de consulta comienza con la cláusula habitual que apunta a la primera secuencia (recetas) y declara la receta de la variable de rango.
+
+Luego viene el uso de la cláusula de unión. Aquí se introduce otra variable de rango (revisión) que representa los elementos que se procesan en la secuencia de entrada de las revisiones. 
+
+La palabra clave `on` permite especificar qué valor del objeto variable de rango de receta se relaciona con qué valor del objeto variable de rango de revisión.
+
+ De nuevo, la palabra clave `equals` se utiliza aquí para representar una equi-join. Esta cláusula de unión básicamente indica que las revisiones pertenecen a recetas identificadas por los valores comunes de Id en Recipe y RecipeId en Review.
+
+>Salida:
+>
+>Mashed Potato - 'Tasty!' 
+>
+>Mashed Potato - 'Not nice :(' 
+>
+>Mashed Potato - 'Pretty good' 
+>
+>Crispy Duck - 'Too hard' 
+>
+>Crispy Duck - 'Loved it'
+
+Observe aquí que la receta "Sachertorte" no existe en la salida. Esto se debe a que no hay revisiones para ello, es decir, no hay elementos coincidentes en la segunda secuencia de entrada (revisiones).
+
+También tenga en cuenta que el resultado es "plano", lo que significa que no hay un concepto de grupos de revisiones que pertenezcan a una receta "principal".
 
 
+## Group join - Una unión de grupo 
 
+Puede producir un resultado jerárquico agrupado donde los elementos de la segunda secuencia se comparan con los elementos de la primera secuencia.
+A diferencia de la combinación interna anterior, la salida de una combinación de grupo puede organizarse jerárquicamente con las revisiones agrupadas en su receta relacionada.
 
+```c#
+using System;
+using System.Collections.Generic; // Collecciones genericas
+using System.Linq; // LinQ
+
+namespace ConsoleApp
+{
+    class Recipe
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+    class Review
+    {
+        public int RecipeId { get; set; }
+        public string ReviewText { get; set; }
+    }
+    class Program
+    {
+        static void Main()
+        {
+            Recipe[] recipes = 
+            {
+                new Recipe { Id = 1, Name = "Mashed Potato" },
+                new Recipe { Id = 2, Name = "Crispy Duck" },
+                new Recipe { Id = 3, Name = "Sachertorte" }
+            };
+
+            Review[] reviews = 
+            {
+                new Review { RecipeId = 1, ReviewText = "Tasty!" },
+                new Review { RecipeId = 1, ReviewText = "Not nice :(" },
+                new Review { RecipeId = 1, ReviewText = "Pretty good" },
+                new Review { RecipeId = 2, ReviewText = "Too hard" },
+                new Review { RecipeId = 2, ReviewText = "Loved it" }
+            };
+
+            var query = from recipe in recipes
+                        join review in reviews on recipe.Id equals review.RecipeId into reviewGroup
+                        select new // anonymous type 
+                        {
+                            RecipeName = recipe.Name, Reviews = reviewGroup // collection of related reviews 
+                        };
+
+            foreach (var item in query)
+            {
+                Console.WriteLine("Reviews for {0}", item.RecipeName);
+
+                foreach (var review in item.Reviews)
+                {
+                    Console.WriteLine(" - {0}", review.ReviewText);
+                }
+            }
+        }
+    }
+}
+```
+
+En esta versión, observe la adición de la palabra clave en. Esto permite la creación de resultados jerárquicos. La variable de rango reviewGroup representa una secuencia de revisiones que coinciden con la expresión de unión, en este caso donde la receta.Id es igual a review.RecipeId.
+Para crear la secuencia de salida de los grupos (donde cada grupo contiene las revisiones relacionadas), el resultado de la consulta se proyecta en un tipo anónimo. Cada instancia de este tipo anónimo en la secuencia de salida representa cada grupo. El tipo anónimo tiene dos propiedades: Nombre de receta que proviene del elemento en la primera secuencia y Revisiones que provienen de los resultados de la expresión de unión, es decir, las revisiones que pertenecen a la receta.
+La salida de este código produce lo siguiente:
