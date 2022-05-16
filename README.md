@@ -223,7 +223,7 @@ Resultado:
 
 ### Borrar Tabla
 
-```mssql
+```sql
 DROP TABLE NombreDeLaTabla;
 ```
 
