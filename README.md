@@ -135,7 +135,7 @@ A continuación os mostramos los tipos de datos que se pueden definir para este 
 Para aclarar algunas instrucciones o documentar codigo, en ocasiones, necesitamos agregar comentarios.
 Es posible ingresar comentarios en la línea de comandos, es decir, un texto que no se ejecuta; para ello se emplean dos guiones (--) al comienzo de la línea:
 
-```mssql
+```sql
  SELECT * FROM Estudiantes -- Esto es un comentario
  SELECT * FROM Empleados /* Otra Forma de realizar comentarios*/
 ```
@@ -146,7 +146,7 @@ Para agregar varias líneas de comentarios, se coloca una barra seguida de un as
 
 ### Crear base de datos
 
-```mssql
+```sql
 CREATE DATABASE NombreDeMiBaseDeDatos;
 ```
 
@@ -154,7 +154,7 @@ CREATE DATABASE NombreDeMiBaseDeDatos;
 
 ### Borrar base de datos
 
-```mssql
+```sql
 DROP DATABASE NombreDeMiBaseDeDatos;
 ```
 
@@ -162,7 +162,7 @@ DROP DATABASE NombreDeMiBaseDeDatos;
 
 Cada campo con su tipo debe separarse con comas de los siguientes, excepto el último.
 
-```mssql
+```sql
 CREATE TABLE NombreDeLaTabla(
     NombreDelCampo1 TIPODEDATO(TamañoDelDato),
     NombreDelCampo2 TIPODEDATO(TamañoDelDato),
@@ -171,7 +171,7 @@ CREATE TABLE NombreDeLaTabla(
 );
 ```
 
-```mssql
+```sql
 CREATE TABLE Estudiante(
     Nombre VARCHAR(20),
     Apellido VARCHAR(20),
@@ -181,12 +181,12 @@ CREATE TABLE Estudiante(
 
 ### Insertar Registros
 
-```mssql
+```sql
 INSERT INTO NombreDeLaTabla(NombreDelCampo1,NombreDelCampo2,NombreDelCampo3) 
 VALUES ('valorCampo1', 'valorCampo1', 'valorCampo1');
 ```
 
-```mssql
+```sql
 INSERT INTO Estudiantes (Nombre,Apellido,Edad) 
 VALUES ('Mario', 'Rojas', '23');
 
@@ -199,17 +199,17 @@ VALUES ('Maria', 'De Freitas', '55');
 
 ### Consultar Registros
 
-```mssql
+```sql
 SELECT Campo1,Campo2 FROM NombreDeLaTabla;
 ```
 
-```mssql
+```sql
 SELECT Nombre,Apellido FROM Estudiantes;
 ```
 
 Para seleccionar todos los campos de una tabla se usa el operador *
 
-```mssql
+```sql
 SELECT * FROM Estudiantes;
 ```
 
@@ -234,7 +234,7 @@ También es posible recuperar algunos registros.
 
 Existe una cláusula, "where" con la cual podemos especificar condiciones para una consulta "select". Es decir, podemos recuperar algunos registros, sólo los que cumplan con ciertas condiciones indicadas con la cláusula "where". Por ejemplo, queremos ver el usuario cuyo nombre es "Maria", para ello utilizamos "where" y luego de ella, la condición:
 
-```mssql
+```sql
 SELECT Campo1,Campo2 FROM NombreDeLaTabla
 WHERE Condicion;
 ```
@@ -243,7 +243,7 @@ Ejemplo 1)
 
 Traerá como condición todos los registros que tenga  nombre María
 
-```mssql
+```sql
 SELECT Nombre,Apellido,Edad FROM Estudiantes
 WHERE Nombre = 'Maria';
 ```
@@ -260,7 +260,7 @@ Ejemplo 2)
 
 Selecciona todos los campos de la tabla estudiantes donde el estudiante sea menor a 50 años
 
-```mssql
+```sql
 SELECT * from Estudiantes
 WHERE Edad < 50;
 ```
@@ -274,13 +274,13 @@ WHERE Edad < 50;
 
 Para eliminar todos los  registros de una tabla usamos el comando "delete":
 
-```mssql
+```sql
 DELETE FROM NombreDeLaTabla;
 ```
 
 Para eliminar determino registro debe usar un condicional 
 
-```mssql
+```sql
 DELETE FROM Estudiantes
 WHERE Nombre = 'Mario';
 ```
@@ -291,7 +291,7 @@ Para modificar uno o varios datos de uno o varios registros utilizamos la palabr
 
 Actualiza la Edad a '29' a todos los registro que tengan como nombre Jose
 
-```mssql
+```sql
 UPDATE Estudiantes SET Edad= '29'
 WHERE Nombre = 'Jose';
 ```
@@ -308,7 +308,7 @@ En contraposición, tenemos campos que no pueden estar vacíos jamás.
 
 Veamos un ejemplo. Tenemos nuestra tabla "libros". El campo "titulo" no debería estar vacío nunca, igualmente el campo "autor". Para ello, al crear la tabla, debemos especificar que dichos campos no admitan valores nulos:
 
-```mssql
+```sql
  CREATE TABLE Libros(
     Titulo varchar(30) not null, -- No Acepta Valores Nulls
     Autor varchar(20) not null, -- No Acepta Valores Nulls
@@ -321,7 +321,7 @@ VALUES('Don Quijote de la Mancha', 'Miguel de Cervantes Saavedra', 'Francisco de
 
 Si se intenta almacenar un valor null en un campo donde su propiedad esta definada como " NOT NULL" dara como mensaje de error:
 
-```mssql
+```sql
 INSERT INTO Libros(Titulo,Autor,Editorial,Precio)
 VALUES(null, 'Miguel de Cervantes Saavedra', 'Francisco de Robles', '30000');
 ```
@@ -334,7 +334,7 @@ La columna no permite nulos. La inserción a fallado
 
 Para ver cuáles campos admiten valores nulos y cuáles no, empleamos el procedimiento almacenado "sp_columns":
 
-```mssql
+```sql
  exec sp_columns libros;
 ```
 
